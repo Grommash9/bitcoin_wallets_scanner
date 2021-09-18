@@ -27,7 +27,6 @@ def add_new_user(user_info):
             user_count_to_write.write(str(new_q))
 
 
-
 def add_search_attempt():
     with open(files_path + 'total_search_count.txt', 'r') as total_attempts_file:
         x = total_attempts_file.readline()

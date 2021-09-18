@@ -34,49 +34,39 @@ class InputUserData(StatesGroup):
 
 logging.basicConfig(level=logging.INFO)
 memory_storage = MemoryStorage()
-bot = Bot(token='нет')
+bot = Bot(token='1976564059:AAF8JV2xhV5_eOZUsjR653gu01-L-8KBYwY')
 dp = Dispatcher(bot, storage=memory_storage)
 
 order_status_dict = dict()
 
 
-def thread_function(address, target_user_id):
+def main_thread_function(address, target_user_id):
+
+    start_time = time.time()
 
     try:
-
         order_status_dict[target_user_id] = {address: '\n\nПоиск кошельков пользователя - *process*'}
-
         all_user_wallets = ['Список кошельков пользователя найденных по факту участия в одной транзакции '
                             '(точно принадлежат одному человеку): \n\n']
-
         all_user_wallets += sochain.find_all_user_wallets(address)
-
-        order_status_dict[target_user_id] = {address: 'Поиск кошельков - *ok*\n'
+        order_status_dict[target_user_id] = {address: '\n\nПоиск кошельков - *ok*\n'
                                                       'Кто отправлял пользователю деньги - *process*'}
-
         senders_to_user = ['\n\nСписок кошельков которые учавствовали в транзакциях, которые пополниляли счет '
                            'пользователя(за исключением погрешностей - те кто платил пользователю): \n\n']
-
         senders_to_user += sochain.who_send_money_to_user(all_user_wallets)
-
-        order_status_dict[target_user_id] = {address: 'Поиск кошельков - *ok*\n'
-                                                      ' Кто отправлял - *ok*\nКому отправлял пользователь - *process*'}
-
+        order_status_dict[target_user_id] = {address: '\n\nПоиск кошельков - *ok*\n'
+                                                      'Кто отправлял пользователю деньги - *ok*\nКому отправлял пользователь - *process*'}
         recipients_from_user = [
             '\n\nСписок кошельков которые учавствовали в транзакции, когда пользователь отправлял деньги '
             '(за исключением погрешностей - те кому пользовтель платил): \n\n']
-
         recipients_from_user += sochain.sending_money_by_user(all_user_wallets)
-
-        deep_shit = all_user_wallets + senders_to_user + recipients_from_user
-
+        timing = [f'\n\nПодготовка документа заняла {(time.time() - start_time) / 60} минут']
+        deep_shit = all_user_wallets + senders_to_user + recipients_from_user + timing
         order_status_dict[target_user_id][address] = 'Все данные получены идет запись в файл'
-
-        if len(deep_shit) != 0:
+        if len(deep_shit) != 1:
             work_with_files.write_up_associated_addresses(deep_shit, address, True)
         else:
             work_with_files.write_up_associated_addresses(deep_shit, address, False)
-
     except:
         order_status_dict[target_user_id][address] = 'failed'
     else:
@@ -138,6 +128,7 @@ async def handle_a(callback_query: types.CallbackQuery):
                         new_button = InlineKeyboardButton(text=addresses, callback_data=f'give_{addresses}')
                         work_with_files.add_main_button(callback_query.from_user.id, new_button)
                         addresses_to_remove_from_order_dict_list.append(addresses)
+                        order_status_dict[users_id][addresses] = 'Забирайте'
                         message_to_send += f'Проверка адреса *{addresses}* успешно завершена,' \
                                            f' вы можете забрать результаты нажав на кнопку ниже'
                     elif status == 'failed':
@@ -146,6 +137,7 @@ async def handle_a(callback_query: types.CallbackQuery):
                                            f' с разработчиком'
                     else:
                         message_to_send += f'Текущий статус проверки адреса *{addresses}* - {status}'
+
         if message_to_send == '':
             message_to_send = 'У вас нет результатов для скачивания, пожалуйста инициализируйте новый поиск'
         for custom_buttons in work_with_files.get_user_buttons(user_id=callback_query.from_user.id):
@@ -186,13 +178,30 @@ async def any_message_answer(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data.startswith('check_'))
 async def handle_address_check(callback_query: types.CallbackQuery):
     if not callback_query.from_user.id in order_status_dict.keys():
+        isundone = False
+        for users_id, orders in order_status_dict.items():
+            for address, status in order_status_dict[users_id].items():
+                if status != 'done':
+                    isundone = True
 
-        await bot.send_message(chat_id=callback_query.from_user.id,
-                               text="Введите биткоин адрес, "
-                                    "что бы получить все адреса на которые отправлялись неизрасходовынные средства:\n\n"
-                                    "_Для отмены отправьте 1 любой символ_", parse_mode="Markdown")
-        await InputUserData.step_1.set()
-        await bot.answer_callback_query(callback_query.id)
+        if isundone:
+            new_markup = InlineKeyboardMarkup()
+            new_markup.add(button_collection['Статус проверки'])
+            await bot.send_message(chat_id=callback_query.from_user.id,
+                                   text="Кто-то сейчас проверяет адрес, к сожаланию пока что бот "
+                                        "может обрабатывать только один заказ за раз, пожалуйста ожидайте,"
+                                        "извините за неудобства",
+                                   reply_markup=all_buttons_from_collection_keyboard,
+                                   parse_mode="Markdown")
+            await bot.answer_callback_query(callback_query.id)
+        else:
+            await bot.send_message(chat_id=callback_query.from_user.id,
+                                   text="Введите биткоин адрес, "
+                                        "что бы получить все адреса на которые отправлялись "
+                                        "неизрасходовынные средства:\n\n"
+                                        "_Для отмены отправьте 1 любой символ_", parse_mode="Markdown")
+            await InputUserData.step_1.set()
+            await bot.answer_callback_query(callback_query.id)
     else:
         new_markup = InlineKeyboardMarkup()
         new_markup.add(button_collection['Статус проверки'])
@@ -208,7 +217,6 @@ async def handle_address_check(callback_query: types.CallbackQuery):
 @dp.message_handler(state=InputUserData.step_1, content_types=types.ContentTypes.TEXT)
 async def questionnaire_state_1_message(message: types.Message, state: FSMContext):
     async with state.proxy() as user_data:
-
         user_data['input_user'] = message.text.replace('\n',
                                                        ' ')
         await state.finish()
@@ -225,13 +233,12 @@ async def questionnaire_state_1_message(message: types.Message, state: FSMContex
 
             await bot.send_message(chat_id=message.from_user.id,
                                    text=f"Адрес валидный и был принят в обработку,"
-                                        f" вы можете следить за ситуацией в меню -*'Статус проверки'*,"
-                                        f" учтите, что на данный момент бот может проверять "
-                                        f"только один адрес за раз", reply_markup=all_buttons_from_collection_keyboard,
+                                        f"проверить статус можно нажав на соответствующую кнопку",
+                                   reply_markup=all_buttons_from_collection_keyboard,
                                    parse_mode="Markdown")
-
-            x = threading.Thread(target=thread_function, args=(address, message.from_user.id))
+            x = threading.Thread(target=main_thread_function, args=[target_wallet, message.from_user.id])
             x.start()
+
         else:
             await bot.send_message(chat_id=message.from_user.id, text='В отправленном вами сообщении не найдено'
                                                                       ' действительных биткоин '
