@@ -20,7 +20,10 @@ def check_address_valid(some_address, blockchain='BTC'):
 
 
 
-def find_all_user_wallets(some_address, blockhain='BTC', already_checked_tx=list(), already_checked_address=list()):
+def find_all_user_wallets(some_address, blockhain='BTC', already_checked_tx=list(), already_checked_address=list(), should_clean_up = True):
+    if should_clean_up:
+        already_checked_address = []
+        already_checked_tx = []
     already_checked_address.append(some_address)
     spent_tx_list = []
     response = requests.get(f'https://chain.so/api/v2/get_tx_spent/{blockhain}/{str(some_address)}')
@@ -49,7 +52,7 @@ def find_all_user_wallets(some_address, blockhain='BTC', already_checked_tx=list
     for address_to_chek in tx_inputs:
         if address_to_chek not in already_checked_address:
             if len(already_checked_address) < size_of_search:
-                find_all_user_wallets(address_to_chek, blockhain='BTC', already_checked_tx=already_checked_tx, already_checked_address=already_checked_address)
+                find_all_user_wallets(address_to_chek, blockhain='BTC', already_checked_tx=already_checked_tx, already_checked_address=already_checked_address, should_clean_up = False)
     return already_checked_address
 
 

@@ -1,5 +1,1 @@
-{"id": 999678965, "is_bot": false, "first_name": "РђР»РµРєСЃР°РЅРґСЂ", "username": "grommash9", "language_code": "ru"}
-{"id": 314921662, "is_bot": false, "first_name": "va", "username": "vilfsq", "language_code": "ru"}
-{"id": 1974254417, "is_bot": false, "first_name": "РРёРЅС‚РµР»", "username": "garik2121", "language_code": "ru"}
-{"id": 757571531, "is_bot": false, "first_name": "Bro", "username": "thebrotherbro", "language_code": "ru"}
-{"id": 359154747, "is_bot": false, "first_name": "Artemiy", "language_code": "ru"}
+{"id": 999678965, "is_bot": false, "first_name": "Александр", "username": "grommash9", "language_code": "ru"}

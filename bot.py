@@ -10,9 +10,9 @@ from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.utils import executor
 import work_with_files
 import sochain
+import file_path
 
-files_path = '/home/wallets_scanner_bot/'
-#files_path = 'C:/Users/Гриша/PycharmProjects/bitcoin_wallets_scanner/'
+
 
 button_collection = {
     'Проверить один адрес': InlineKeyboardButton(text='Проверить биткоин адрес', callback_data='check_solo'),
@@ -159,7 +159,7 @@ async def handle_a(callback_query: types.CallbackQuery):
 async def handle_a(callback_query: types.CallbackQuery):
     target_file = callback_query.data[5:]
     try:
-        await bot.send_document(callback_query.from_user.id, open(files_path + f'results/{target_file}.txt', 'rb'))
+        await bot.send_document(callback_query.from_user.id, open(file_path.files_path + f'results/{target_file}.txt', 'rb'))
         del order_status_dict[callback_query.from_user.id]
         work_with_files.remove_button(callback_query.from_user.id, some_button_name=target_file)
         work_with_files.remove_results_file(target_file)
