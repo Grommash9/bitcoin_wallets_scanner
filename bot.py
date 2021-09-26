@@ -34,7 +34,7 @@ class InputUserData(StatesGroup):
 
 logging.basicConfig(level=logging.INFO)
 memory_storage = MemoryStorage()
-bot = Bot(token='1976564059:AAF8JV2xhV5_eOZUsjR653gu01-L-8KBYwY')
+bot = Bot(token='1976564059:AAFfVB2IB3ud6ies2ePaOtUQkjfqLqP6vXU')
 dp = Dispatcher(bot, storage=memory_storage)
 
 order_status_dict = dict()
